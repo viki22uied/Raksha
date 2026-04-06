@@ -47,7 +47,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/health', healthRoutes);
 
 // --- Frontend Serving (Monolith mode) -------------------------------
-const clientBuildPath = path.join(__dirname, '../../client/dist');
+const clientBuildPath = path.join(__dirname, '../client/dist');
 app.use(express.static(clientBuildPath));
 
 app.get('*', (req, res, next) => {
