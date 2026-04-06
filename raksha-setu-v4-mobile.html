@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>Raksha Setu V4 Mobile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <style>
+    :root {
+      --bg: #f5f2ee;
+      --surface: rgba(255,255,255,.82);
+      --surface-strong: rgba(255,255,255,.93);
+      --line: rgba(17,17,17,.07);
+      --text: #141414;
+      --muted: #686871;
+      --soft: #8d8d96;
+      --black: #151515;
+      --success: #2f9b67;
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --blue: #3350bf;
+      --peach: #ffd8cc;
+      --rose: #f2b7bd;
+      --shadow: 0 16px 40px rgba(15, 23, 42, .10), inset 0 1px 0 rgba(255,255,255,.72);
+      --radius-xl: 28px;
+      --radius-2xl: 34px;
+    }
+    * { box-sizing: border-box; }
+    html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      font-feature-settings: 'liga' 1, 'kern' 1;
+      scroll-behavior: smooth;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      background:
+        radial-gradient(circle at top left, rgba(255,216,204,.58), transparent 24%),
+        radial-gradient(circle at top right, rgba(242,183,189,.38), transparent 20%),
+        linear-gradient(180deg, #faf8f6 0%, #f1ede8 100%);
+      color: var(--text);
+      font-family: Inter, system-ui, sans-serif;
+    }
+    .app {
+      width: 100%;
+      max-width: 430px;
+      min-height: 100dvh;
+      position: relative;
+      overflow: hidden;
+      background: transparent;
+    }
+    .screen { display: none; min-height: 100dvh; padding: 14px 14px 118px; }
+    .screen.active { display: block; }
+    .glass {
+      background: var(--surface);
+      backdrop-filter: blur(24px) saturate(1.1);
+      -webkit-backdrop-filter: blur(24px) saturate(1.1);
+      border: 1px solid rgba(255,255,255,.7);
+      box-shadow: var(--shadow);
+    }
+    .glass-soft {
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(18px) saturate(1.05);
+      -webkit-backdrop-filter: blur(18px) saturate(1.05);
+      border: 1px solid rgba(255,255,255,.64);
+    }
+    .card { border-radius: var(--radius-xl); padding: 16px; }
+    .card-tight { border-radius: 24px; padding: 14px; }
+    .header { position: sticky; top: 0; z-index: 40; padding-top: env(safe-area-inset-top); margin-bottom: 12px; }
+    .header-inner { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 28px; }
+    .eyebrow { font-size: 12px; line-height: 1.2; color: var(--muted); font-weight: 700; letter-spacing: .01em; }
+    .title {
+      font-family: Manrope, Inter, sans-serif;
+      font-size: 26px;
+      line-height: 1.02;
+      letter-spacing: -.055em;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .section-title {
+      font-family: Manrope, Inter, sans-serif;
+      font-size: 19px;
+      line-height: 1.08;
+      letter-spacing: -.04em;
+      font-weight: 800;
+    }
+    .mini-title { font-size: 12px; line-height: 1.25; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+    .value {
+      font-family: Manrope, Inter, sans-serif;
+      font-size: 22px;
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: -.04em;
+      font-variant-numeric: tabular-nums;
+    }
+    .subtext { font-size: 13px; line-height: 1.4; color: var(--muted); }
+    .tiny { font-size: 11px; line-height: 1.35; color: var(--muted); }
+    .label { font-size: 11px; line-height: 1.2; letter-spacing: .16em; text-transform: uppercase; font-weight: 800; color: var(--soft); }
+    .icon-btn {
+      height: 44px; width: 44px; border: none; border-radius: 999px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.86); color: var(--text);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.75);
+    }
+    .icon-btn.dark { background: var(--black); color: white; }
+    .segmented { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; padding: 6px; border-radius: 999px; margin-bottom: 12px; }
+    .segmented button { border:none; background:transparent; border-radius:999px; padding:10px 6px; font-size:12px; line-height:1.1; font-weight:800; color:var(--muted); }
+    .segmented button.active { background:var(--black); color:white; }
+    .grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+    .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .stack { display:grid; gap:12px; }
+    .kpi { border-radius:24px; padding:14px; background:rgba(255,255,255,.78); border:1px solid rgba(17,17,17,.05); }
+    .kpi.dark { background:var(--black); color:white; }
+    .badge { display:inline-flex; align-items:center; gap:6px; padding:9px 12px; border-radius:999px; background:rgba(255,255,255,.82); font-size:12px; font-weight:800; }
+    .dot { width:8px; height:8px; border-radius:999px; }
+    .row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .chips { display:flex; gap:8px; overflow:auto; scrollbar-width:none; }
+    .chips::-webkit-scrollbar { display:none; }
+    .chip { white-space:nowrap; border:none; border-radius:999px; padding:10px 12px; font-size:12px; font-weight:800; background:rgba(255,255,255,.78); color:var(--text); }
+    .chip.active { background:var(--black); color:white; }
+    .list { display:grid; gap:10px; }
+    .list-item { border-radius:22px; padding:14px; background:rgba(255,255,255,.72); border:1px solid rgba(17,17,17,.06); }
+    .fab-nav {
+      position:fixed; left:50%; transform:translateX(-50%); bottom:14px; width:calc(100% - 24px); max-width:406px;
+      border-radius:999px; padding:8px; display:grid; grid-template-columns:repeat(5,1fr); gap:8px; z-index:120;
+    }
+    .fab-nav button { height:52px; border:none; border-radius:999px; background:transparent; color:#767680; display:flex; align-items:center; justify-content:center; }
+    .fab-nav button.active { background:var(--black); color:white; }
+    #map { height:46dvh; min-height:352px; border-radius:30px; overflow:hidden; }
+    .leaflet-container { width:100%; height:100%; border-radius:30px; z-index:1; }
+    .map-wrap { position:relative; }
+    .map-overlay-top { position:absolute; left:10px; right:10px; top:10px; display:flex; gap:8px; overflow:auto; scrollbar-width:none; z-index:20; }
+    .map-overlay-top::-webkit-scrollbar { display:none; }
+    .sheet {
+      position:fixed; left:50%; transform:translateX(-50%); bottom:88px; width:calc(100% - 24px); max-width:406px;
+      border-radius:30px 30px 22px 22px; padding:14px; z-index:80; display:none;
+    }
+    .sheet.active { display:block; }
+    .sheet-handle { width:56px; height:5px; border-radius:999px; background:rgba(17,17,17,.11); margin:0 auto 14px; }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section id="screen-map" class="screen active">
+      <header class="header">
+        <div class="header-inner glass">
+          <div style="flex:1; min-width:0;">
+            <div class="eyebrow">Raksha Setu · Hampi command</div>
+            <div class="title">Live map intelligence</div>
+          </div>
+          <button class="icon-btn" onclick="toggleSheet()" aria-label="Open map details">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M7 12h10"></path><path d="M10 18h4"></path></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="segmented glass-soft">
+        <button class="active" onclick="setMapFilter('all', this)">All</button>
+        <button onclick="setMapFilter('safe', this)">Safe</button>
+        <button onclick="setMapFilter('warning', this)">Watch</button>
+        <button onclick="setMapFilter('danger', this)">Critical</button>
+      </div>
+
+      <div class="map-wrap glass card-tight" style="padding:10px; margin-bottom:12px;">
+        <div class="map-overlay-top">
+          <button class="chip active">156 tourists</button>
+          <button class="chip">12 geo-fences</button>
+          <button class="chip">8 heritage sites</button>
+          <button class="chip">12 responders</button>
+          <button class="chip">3,500 locations</button>
+        </div>
+        <div id="map"></div>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:12px;">
+        <article class="kpi"><div class="mini-title">GPS</div><div class="value">&lt;10m</div><div class="tiny">position accuracy</div></article>
+        <article class="kpi"><div class="mini-title">AI</div><div class="value">92%</div><div class="tiny">anomaly detection</div></article>
+        <article class="kpi dark"><div class="mini-title" style="color:rgba(255,255,255,.7)">Alerts</div><div class="value">1.8s</div><div class="tiny" style="color:rgba(255,255,255,.68)">dispatch time</div></article>
+      </div>
+
+      <div class="stack">
+        <article class="glass card">
+          <div class="row" style="align-items:flex-start;">
+            <div>
+              <div class="section-title">Coverage summary</div>
+              <div class="subtext" style="margin-top:4px;">Map-first view of tourists, responders, zone pressure, and route risk.</div>
+            </div>
+            <span class="badge"><span class="dot" style="background:var(--success)"></span>Live</span>
+          </div>
+          <div class="grid-2" style="margin-top:12px;">
+            <div class="list-item"><div class="mini-title">Tracked tourists</div><div class="value">156</div><div class="tiny">active in monitored areas</div></div>
+            <div class="list-item"><div class="mini-title">Safe zones</div><div class="value">12</div><div class="tiny">polygons monitored</div></div>
+            <div class="list-item"><div class="mini-title">Open alerts</div><div class="value">07</div><div class="tiny">high + medium priority</div></div>
+            <div class="list-item"><div class="mini-title">Telemetry</div><div class="value">50</div><div class="tiny">GPS points per sequence</div></div>
+          </div>
+        </article>
+
+        <article class="glass card">
+          <div class="row">
+            <div>
+              <div class="section-title">Major monitored sites</div>
+              <div class="subtext" style="margin-top:4px;">High-density tourist clusters in Hampi.</div>
+            </div>
+            <span class="badge"><span class="dot" style="background:var(--blue)"></span>8 sites</span>
+          </div>
+          <div class="list" style="margin-top:12px;">
+            <div class="list-item"><div class="row"><div><strong>Virupaksha Temple</strong><div class="tiny">34 tourists · 2 responders · low risk</div></div><strong class="value" style="font-size:18px;">34</strong></div></div>
+            <div class="list-item"><div class="row"><div><strong>Vittala Temple</strong><div class="tiny">27 tourists · route corridor active</div></div><strong class="value" style="font-size:18px;">27</strong></div></div>
+            <div class="list-item"><div class="row"><div><strong>Krishna Bazaar</strong><div class="tiny">22 tourists · drift cases monitored</div></div><strong class="value" style="font-size:18px;">22</strong></div></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="screen-alerts" class="screen">
+      <header class="header"><div class="header-inner glass"><div style="flex:1"><div class="eyebrow">AI + geofence events</div><div class="title">Alerts</div></div><button class="icon-btn dark">7</button></div></header>
+      <div class="chips" style="margin-bottom:12px;"><button class="chip active">All alerts</button><button class="chip">Anomalies</button><button class="chip">Geo-fence</button><button class="chip">SOS</button></div>
+      <div class="stack">
+        <article class="glass card"><div class="label" style="color:var(--danger)">High priority</div><div class="section-title" style="margin-top:8px;">Matanga Hill route deviation</div><div class="subtext" style="margin-top:6px;">T-1138 moved 146 meters off route. Nearby responder R-04 auto-suggested.</div></article>
+        <article class="glass card"><div class="label" style="color:var(--warn)">Stationary anomaly</div><div class="section-title" style="margin-top:8px;">Elephant Stables inactivity cluster</div><div class="subtext" style="margin-top:6px;">T-1098 inactive for 18 minutes with low battery and heat exposure risk.</div></article>
+        <article class="glass card"><div class="label" style="color:var(--blue)">Boundary pressure</div><div class="section-title" style="margin-top:8px;">Riverside edge geo-fence load</div><div class="subtext" style="margin-top:6px;">11 near-boundary warnings in the last hour. Predictive alerting active.</div></article>
+        <article class="glass card"><div class="label" style="color:var(--success)">Resolved</div><div class="section-title" style="margin-top:8px;">Medical assist completed</div><div class="subtext" style="margin-top:6px;">Tourist rerouted to lower-risk corridor after verification and hydration support.</div></article>
+      </div>
+    </section>
+
+    <section id="screen-sites" class="screen">
+      <header class="header"><div class="header-inner glass"><div style="flex:1"><div class="eyebrow">Destination intelligence</div><div class="title">Sites</div></div><button class="icon-btn">8</button></div></header>
+      <div class="stack">
+        <article class="glass card"><div class="row"><div><div class="section-title">Virupaksha Temple cluster</div><div class="subtext" style="margin-top:4px;">Core heritage zone with strong responder coverage.</div></div><span class="badge"><span class="dot" style="background:var(--success)"></span>Stable</span></div><div class="grid-2" style="margin-top:12px;"><div class="kpi"><div class="mini-title">Tourists</div><div class="value">34</div></div><div class="kpi"><div class="mini-title">Responders</div><div class="value">2</div></div><div class="kpi"><div class="mini-title">Geo-fence</div><div class="value">On</div></div><div class="kpi"><div class="mini-title">Risk</div><div class="value">Low</div></div></div></article>
+        <article class="glass card"><div class="row"><div><div class="section-title">Vittala Temple corridor</div><div class="subtext" style="margin-top:4px;">Long walking route with crowd-density variation.</div></div><span class="badge"><span class="dot" style="background:var(--blue)"></span>Busy</span></div><div class="grid-2" style="margin-top:12px;"><div class="kpi"><div class="mini-title">Tourists</div><div class="value">27</div></div><div class="kpi"><div class="mini-title">Alerts</div><div class="value">3</div></div><div class="kpi"><div class="mini-title">Avg speed</div><div class="value">3.9</div></div><div class="kpi"><div class="mini-title">Route flow</div><div class="value">Good</div></div></div></article>
+        <article class="glass card"><div class="row"><div><div class="section-title">Matanga Hill climb</div><div class="subtext" style="margin-top:4px;">Fatigue and off-route risk zone.</div></div><span class="badge"><span class="dot" style="background:var(--danger)"></span>Critical</span></div><div class="grid-2" style="margin-top:12px;"><div class="kpi"><div class="mini-title">Tourists</div><div class="value">11</div></div><div class="kpi"><div class="mini-title">Deviation</div><div class="value">4</div></div><div class="kpi"><div class="mini-title">Responder ETA</div><div class="value">5m</div></div><div class="kpi"><div class="mini-title">Weather risk</div><div class="value">Med</div></div></div></article>
+      </div>
+    </section>
+
+    <section id="screen-identity" class="screen">
+      <header class="header"><div class="header-inner glass"><div style="flex:1"><div class="eyebrow">Tamper-proof identity</div><div class="title">Digital ID</div></div><button class="icon-btn">ID</button></div></header>
+      <div class="stack">
+        <article class="glass card">
+          <div class="label">Tourist profile</div>
+          <div class="section-title" style="margin-top:8px; font-size:24px;">Priya Sharma</div>
+          <div class="subtext" style="margin-top:6px;">T-1421 · Bengaluru · verified at entry checkpoint · tourism authority confirmed.</div>
+          <div class="grid-2" style="margin-top:12px;">
+            <div class="kpi"><div class="mini-title">Ethereum DID</div><div style="font-size:14px;font-weight:800;line-height:1.35">did:ethr:0x8af3...2cd1</div></div>
+            <div class="kpi"><div class="mini-title">IPFS hash</div><div style="font-size:14px;font-weight:800;line-height:1.35">Qm7x...3kd2</div></div>
+            <div class="kpi"><div class="mini-title">Insurance</div><div style="font-size:14px;font-weight:800;line-height:1.35">HDFC ERGO</div></div>
+            <div class="kpi"><div class="mini-title">Blood group</div><div style="font-size:14px;font-weight:800;line-height:1.35">B+</div></div>
+          </div>
+        </article>
+        <article class="glass card"><div class="section-title">Emergency packet</div><div class="subtext" style="margin-top:6px;">Passport, nationality, contacts, medical notes, and responder-safe verification trail.</div><div class="grid-2" style="margin-top:12px;"><div class="list-item"><strong>Contacts</strong><div class="tiny" style="margin-top:4px;">2 encrypted family contacts</div></div><div class="list-item"><strong>Medical</strong><div class="tiny" style="margin-top:4px;">No allergy flags</div></div></div></article>
+      </div>
+    </section>
+
+    <section id="screen-sos" class="screen">
+      <header class="header"><div class="header-inner glass"><div style="flex:1"><div class="eyebrow">Incident response</div><div class="title">SOS</div></div><button class="icon-btn dark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.63 2.63a2 2 0 0 1-.45 2.11L8 9.91a16 16 0 0 0 6.09 6.09l1.45-1.29a2 2 0 0 1 2.11-.45c.85.3 1.73.51 2.63.63A2 2 0 0 1 22 16.92z"></path></svg></button></div></header>
+      <div class="stack">
+        <article class="glass card" style="text-align:center;">
+          <div class="label">Emergency trigger</div>
+          <div style="margin:16px auto 14px; height:164px; width:164px; border-radius:999px; background:#151515; color:white; display:flex; align-items:center; justify-content:center; box-shadow:0 24px 44px rgba(0,0,0,.18);">
+            <div><div class="title" style="font-size:36px; color:white; letter-spacing:-.07em;">SOS</div><div class="tiny" style="color:rgba(255,255,255,.72)">Mock action</div></div>
+          </div>
+          <div class="section-title">Full emergency packet</div>
+          <div class="subtext" style="margin-top:6px;">Location, latest trajectory, DID, insurance, contacts, and nearest responder are shared instantly.</div>
+        </article>
+        <article class="glass card"><div class="section-title">Response workflow</div><div class="grid-2" style="margin-top:12px;"><div class="list-item"><strong>50 GPS points</strong><div class="tiny" style="margin-top:4px;">LSTM-ready sequence</div></div><div class="list-item"><strong>Geo-fence state</strong><div class="tiny" style="margin-top:4px;">Inside / outside boundary</div></div><div class="list-item"><strong>DID packet</strong><div class="tiny" style="margin-top:4px;">Ethereum + IPFS</div></div><div class="list-item"><strong>Dispatch</strong><div class="tiny" style="margin-top:4px;">Under 2 seconds</div></div></div></article>
+      </div>
+    </section>
+
+    <aside id="tourist-sheet" class="sheet glass active">
+      <div class="sheet-handle"></div>
+      <div class="row" style="margin-bottom:12px;">
+        <div><div class="eyebrow">Map detail layer</div><div class="section-title">Operational summary</div></div>
+        <button class="icon-btn" onclick="toggleSheet()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18"></path><path d="M6 6l12 12"></path></svg></button>
+      </div>
+      <div class="grid-2" style="margin-bottom:12px;">
+        <div class="kpi"><div class="mini-title">Tracked tourists</div><div class="value">156</div></div>
+        <div class="kpi"><div class="mini-title">Open alerts</div><div class="value">07</div></div>
+      </div>
+      <div class="list">
+        <div class="list-item"><div class="row"><div><strong>Virupaksha Temple</strong><div class="tiny">34 tourists · low risk</div></div><span class="badge"><span class="dot" style="background:var(--success)"></span>Stable</span></div></div>
+        <div class="list-item"><div class="row"><div><strong>Elephant Stables</strong><div class="tiny">19 tourists · anomaly watch</div></div><span class="badge"><span class="dot" style="background:var(--warn)"></span>Watch</span></div></div>
+        <div class="list-item"><div class="row"><div><strong>Matanga Hill</strong><div class="tiny">11 tourists · deviation alerts</div></div><span class="badge"><span class="dot" style="background:var(--danger)"></span>Critical</span></div></div>
+      </div>
+    </aside>
+
+    <nav class="fab-nav glass">
+      <button class="active" onclick="showScreen('map', this)" aria-label="Map"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l-6 3V6l6-3 6 3 6-3v15l-6 3-6-3z"></path><path d="M9 3v15"></path><path d="M15 6v15"></path></svg></button>
+      <button onclick="showScreen('alerts', this)" aria-label="Alerts"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg></button>
+      <button onclick="showScreen('sites', this)" aria-label="Sites"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-6-4.35-6-11a6 6 0 0 1 12 0c0 6.65-6 11-6 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg></button>
+      <button onclick="showScreen('identity', this)" aria-label="Identity"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21V19a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></button>
+      <button onclick="showScreen('sos', this)" aria-label="SOS"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.63 2.63a2 2 0 0 1-.45 2.11L8 9.91a16 16 0 0 0 6.09 6.09l1.45-1.29a2 2 0 0 1 2.11-.45c.85.3 1.73.51 2.63.63A2 2 0 0 1 22 16.92z"></path></svg></button>
+    </nav>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    const siteClusters = [
+      {name:'Virupaksha Temple', center:[15.3358,76.4606], count:34, color:'#2f9b67'},
+      {name:'Krishna Bazaar', center:[15.3339,76.4587], count:22, color:'#3350bf'},
+      {name:'Elephant Stables', center:[15.3386,76.4621], count:19, color:'#f59e0b'},
+      {name:'Lotus Mahal', center:[15.3394,76.4616], count:14, color:'#2f9b67'},
+      {name:'Vittala Temple', center:[15.3443,76.4752], count:27, color:'#3350bf'},
+      {name:'Matanga Hill', center:[15.3317,76.4598], count:11, color:'#ef4444'},
+      {name:'Achyutaraya Temple', center:[15.3367,76.4682], count:16, color:'#f59e0b'},
+      {name:'Hemakuta Hill', center:[15.3342,76.4573], count:13, color:'#2f9b67'}
+    ];
+    const indianNames = ['Aarav','Vivaan','Aditya','Vihaan','Arjun','Sai','Krishna','Ishaan','Reyansh','Atharv','Aanya','Diya','Anaya','Ira','Saanvi','Myra','Meera','Anika','Riya','Kavya','Rahul','Priya','Neha','Rohan','Kiran','Sneha','Pooja','Nikhil','Varun','Akash','Harsha','Sakshi','Tanvi','Aditi','Manav','Tara','Nisha','Dev','Yash','Aryan'];
+    const mockTourists = [];
+    let seq = 1001;
+    siteClusters.forEach((cluster, idx) => {
+      for (let i = 0; i < cluster.count; i++) {
+        const latJ = (Math.random() - 0.5) * 0.0026;
+        const lngJ = (Math.random() - 0.5) * 0.0026;
+        const state = i % 17 === 0 ? 'danger' : i % 7 === 0 ? 'warning' : 'safe';
+        mockTourists.push({
+          id: `T-${seq++}`,
+          name: indianNames[(i + idx * 3) % indianNames.length],
+          coords: [cluster.center[0] + latJ, cluster.center[1] + lngJ],
+          status: state,
+          speed: `${(1.2 + Math.random() * 4.8).toFixed(1)} km/h`,
+          zone: cluster.name
+        });
+      }
+    });
+
+    let map;
+    let markers = [];
+    let currentFilter = 'all';
+
+    function initMap() {
+      if (map) return;
+      map = L.map('map', { zoomControl: false }).setView([15.3368, 76.4615], 14.7);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+
+      const zones = [
+        {name:'Zone A · Virupaksha Core', coords:[[15.3388,76.4568],[15.3418,76.4604],[15.3394,76.4648],[15.3359,76.4632],[15.3349,76.4588]], color:'#2f9b67'},
+        {name:'Zone B · Krishna Bazaar', coords:[[15.3333,76.4581],[15.3357,76.4558],[15.3382,76.4584],[15.3362,76.4614],[15.3331,76.4607]], color:'#3350bf'},
+        {name:'Zone C · Royal Enclosure', coords:[[15.3376,76.4608],[15.3408,76.4607],[15.3411,76.4642],[15.3375,76.4640]], color:'#2f9b67'},
+        {name:'Zone D · Riverside Edge', coords:[[15.3389,76.4638],[15.3417,76.4655],[15.3395,76.4688],[15.3368,76.4671]], color:'#f59e0b'},
+        {name:'Zone E · Vittala Corridor', coords:[[15.3434,76.4722],[15.3468,76.4734],[15.3459,76.4778],[15.3424,76.4761]], color:'#3350bf'},
+        {name:'Zone F · Hemakuta Hill', coords:[[15.3327,76.4557],[15.3356,76.4554],[15.3354,76.4581],[15.3325,76.4579]], color:'#2f9b67'}
+      ];
+      zones.forEach(z => {
+        L.polygon(z.coords, { color: z.color, weight: 2, dashArray: z.name.includes('D') ? '6 6' : '', fillColor: z.color, fillOpacity: .08 }).addTo(map).bindPopup(z.name);
+      });
+
+      const route = [[15.3314,76.4638],[15.3339,76.4587],[15.3358,76.4606],[15.3372,76.4568],[15.3386,76.4621],[15.3401,76.4654],[15.3443,76.4752]];
+      L.polyline(route, { color:'#171717', weight:4, opacity:.55 }).addTo(map);
+
+      siteClusters.forEach(cluster => {
+        const cIcon = L.divIcon({
+          className: '',
+          html: `<div style="min-width:38px;height:38px;padding:0 10px;border-radius:999px;background:${cluster.color};color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;box-shadow:0 10px 25px rgba(0,0,0,.15);border:3px solid rgba(255,255,255,.94)">${cluster.count}</div>`,
+          iconSize:[38,38], iconAnchor:[19,19]
+        });
+        L.marker(cluster.center, { icon: cIcon }).addTo(map).bindPopup(`<strong>${cluster.name}</strong><br>${cluster.count} tourists active`);
+      });
+
+      renderMarkers();
+
+      const responderIcon = L.divIcon({
+        className: '',
+        html: `<div style="width:18px;height:18px;border-radius:999px;background:#151515;border:3px solid rgba(255,255,255,.96);box-shadow:0 8px 18px rgba(0,0,0,.18)"></div>`,
+        iconSize:[18,18], iconAnchor:[9,9]
+      });
+      [[15.3364,76.4614],[15.3381,76.4598],[15.3448,76.4743],[15.3337,76.4572]].forEach((coords, i) => {
+        L.marker(coords, { icon: responderIcon }).addTo(map).bindPopup(`<strong>Responder R-${i+1}</strong><br>Patrol unit active`);
+      });
+    }
+
+    function renderMarkers() {
+      if (!map) return;
+      markers.forEach(m => map.removeLayer(m));
+      markers = [];
+      const filtered = currentFilter === 'all' ? mockTourists : mockTourists.filter(t => t.status === currentFilter);
+      filtered.forEach(t => {
+        const color = t.status === 'safe' ? '#2f9b67' : t.status === 'warning' ? '#f59e0b' : '#ef4444';
+        const icon = L.divIcon({
+          className: '',
+          html: `<div style="width:11px;height:11px;border-radius:999px;background:${color};border:2.5px solid rgba(255,255,255,.95);box-shadow:0 5px 14px rgba(0,0,0,.16)"></div>`,
+          iconSize:[11,11], iconAnchor:[5.5,5.5]
+        });
+        const m = L.marker(t.coords, { icon }).addTo(map).bindPopup(`<strong>${t.id} · ${t.name}</strong><br>${t.zone}<br>Status: ${t.status}<br>Speed: ${t.speed}`);
+        markers.push(m);
+      });
+    }
+
+    function showScreen(name, btn) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(`screen-${name}`).classList.add('active');
+      document.querySelectorAll('.fab-nav button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const sheet = document.getElementById('tourist-sheet');
+      if (name === 'map') {
+        sheet.classList.add('active');
+        setTimeout(() => { initMap(); map.invalidateSize(); }, 60);
+      } else {
+        sheet.classList.remove('active');
+      }
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+
+    function toggleSheet() {
+      const sheet = document.getElementById('tourist-sheet');
+      sheet.classList.toggle('active');
+      if (map) setTimeout(() => map.invalidateSize(), 60);
+    }
+
+    function setMapFilter(filter, el) {
+      currentFilter = filter;
+      document.querySelectorAll('.segmented button').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      renderMarkers();
+    }
+
+    window.addEventListener('load', () => {
+      initMap();
+      if (map) map.invalidateSize();
+    });
+  </script>
+</body>
+</html>
