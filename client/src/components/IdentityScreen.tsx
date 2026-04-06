@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { identityAPI, authAPI, touristAPI } from '../api';
+import { identityAPI, authAPI } from '../api';
 
 interface IdentityScreenProps { isActive: boolean; }
 

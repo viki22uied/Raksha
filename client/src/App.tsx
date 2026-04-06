@@ -4,7 +4,7 @@ import AlertsScreen from './components/AlertsScreen';
 import IdentityScreen from './components/IdentityScreen';
 import SosScreen from './components/SosScreen';
 import AnalyticsScreen from './components/AnalyticsScreen';
-import { MapIcon, AlertIcon, PinIcon, UserIcon, PhoneIcon } from './components/Icons';
+import { MapIcon, AlertIcon, UserIcon, PhoneIcon } from './components/Icons';
 import socketService from './api/socket';
 import AuthScreen from './components/AuthScreen';
 import './index.css';

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { analyticsAPI, geofenceAPI } from '../api';
+import { analyticsAPI } from '../api';
 
 interface SitesScreenProps { isActive: boolean; }
 

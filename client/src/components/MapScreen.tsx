@@ -4,7 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { siteClusters, zones, routePath, responderPositions, generateMockTourists } from '../data/mockData';
 import { FilterIcon, CloseIcon } from './Icons';
-import { analyticsAPI, alertAPI, geofenceAPI } from '../api';
+import { analyticsAPI } from '../api';
 import socketService from '../api/socket';
 
 function InvalidateSize() {
