@@ -1,7 +1,7 @@
 import { ILocationPing } from '../models/LocationPing';
 import { Anomaly, IAnomaly, ISequencePoint } from '../models/Anomaly';
 import { alertService } from './alert.service';
-import { lstmService } from '@services/lstm.service';
+import { lstmService } from './lstm.service';
 import { websocketService } from './websocket.service';
 import {
   ANOMALY_TYPE,
